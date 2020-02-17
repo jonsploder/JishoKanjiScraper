@@ -14,15 +14,20 @@ def scrape(site):
         site = sitePrefix + site
         response = urllib2.Request(site)
         text = urllib2.urlopen(response).read()
-        matches = re.search("<strong>(.+)</strong> strokes", text)
-        if (matches):
-                found = matches.group(1)
-                return found
+        strokesMatches = re.search("<strong>(.+)</strong> strokes", text)
+        meaningsMatches = re.search('kanji-details__main-meanings">(.+?)</div>', text, re.MULTILINE|re.DOTALL)
+        if strokesMatches and meaningsMatches:
+                strokes = strokesMatches.group(1).strip()
+                meanings = meaningsMatches.group(1).strip()
+                return [strokes, meanings]
+        else:
+                raise("Error")
+
 
 result = []
 
-kanjiLeft = kanji[1600:2200]
-pool = ThreadPool(8)
+kanjiLeft = kanji[0:2200]
+pool = ThreadPool(4) #8 max magic number?
 results = pool.map(scrape, kanjiLeft)
 pool.close()
 pool.join()
